@@ -1,0 +1,6 @@
+fastapi==0.95.0
+uvicorn==0.22.0
+spacy==2.3.2
+PyMuPDF==1.22.5
+Pillow==8.3.2   # latest compatible with Python 3.7
+pytesseract==0.3.10
