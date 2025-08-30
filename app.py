@@ -39,6 +39,7 @@ def extract_text_from_file(file_path):
 def process_resume_file(file_path):
     resume_txt = extract_text_from_file(file_path)
     structured_data = {}
+    
     # spaCy NER
     doc = nlp(resume_txt)
     for ent in doc.ents:
@@ -58,15 +59,58 @@ def process_resume_file(file_path):
         else:
             structured_data[label] = text_val
 
-   # Regex-based extraction
-    emails = re.findall(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", resume_txt)
-    if emails: structured_data["Email"] = emails if len(emails) > 1 else emails[0]
-    phones = re.findall(r"\b\d{7,15}\b", resume_txt)
-    if phones: structured_data["Phone"] = phones if len(phones) > 1 else phones[0]
-    years = re.findall(r"\b(19|20)\d{2}\b", resume_txt)
-    if years: structured_data["Years"] = list(set(years))
-    languages = re.findall(r"\b(English|French|Arabic|German|Spanish)\b", resume_txt, re.IGNORECASE)
-    if languages: structured_data["Languages"] = list(set(languages))
+    # Enhanced Regex-based extraction to complement spaCy model
+    
+    # Email extraction - more comprehensive
+    emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', resume_txt)
+    if emails: 
+        structured_data["Email"] = emails if len(emails) > 1 else emails[0]
+    
+    # Phone number extraction - multiple formats
+    phone_patterns = [
+        r'\+?\d{1,3}[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',  # US format
+        r'\+?\d{1,3}[-.\s]?\d{2,4}[-.\s]?\d{2,4}[-.\s]?\d{2,4}',  # International
+        r'\b\d{10,15}\b'  # Simple numeric
+    ]
+    phones = []
+    for pattern in phone_patterns:
+        phones.extend(re.findall(pattern, resume_txt))
+    if phones: 
+        structured_data["Phone"] = list(set(phones)) if len(phones) > 1 else phones[0]
+    
+    # Experience years extraction
+    years = re.findall(r'\b(19|20)\d{2}\b', resume_txt)
+    if years: 
+        structured_data["Years"] = sorted(list(set(years)))
+    
+    # Enhanced language detection
+    languages = re.findall(r'\b(English|French|Arabic|German|Spanish|Italian|Portuguese|Russian|Chinese|Japanese|Korean|Hindi|Dutch|Swedish|Norwegian|Danish)\b', resume_txt, re.IGNORECASE)
+    if languages: 
+        structured_data["Languages"] = list(set([lang.title() for lang in languages]))
+    
+    # Education extraction
+    education_keywords = re.findall(r'\b(Bachelor|Master|PhD|Doctorate|Diploma|Certificate|B\.?A\.?|M\.?A\.?|B\.?S\.?|M\.?S\.?|MBA|University|College|Institute)\b', resume_txt, re.IGNORECASE)
+    if education_keywords:
+        structured_data["Education"] = list(set([edu.title() for edu in education_keywords]))
+    
+    # Skills extraction (technical keywords)
+    tech_skills = re.findall(r'\b(Python|Java|JavaScript|C\+\+|SQL|HTML|CSS|React|Angular|Node\.js|Django|Flask|AWS|Docker|Kubernetes|Git|Machine Learning|AI|Data Science|Pandas|NumPy|TensorFlow|PyTorch)\b', resume_txt, re.IGNORECASE)
+    if tech_skills:
+        if "Skills" in structured_data:
+            if isinstance(structured_data["Skills"], list):
+                structured_data["Skills"].extend([skill.title() for skill in tech_skills])
+            else:
+                structured_data["Skills"] = [structured_data["Skills"]] + [skill.title() for skill in tech_skills]
+        else:
+            structured_data["Skills"] = [skill.title() for skill in tech_skills]
+        # Remove duplicates
+        if isinstance(structured_data["Skills"], list):
+            structured_data["Skills"] = list(set(structured_data["Skills"]))
+    
+    # Location extraction
+    locations = re.findall(r'\b([A-Z][a-z]+,\s*[A-Z]{2}|[A-Z][a-z]+\s*[A-Z][a-z]+|New York|Los Angeles|Chicago|Houston|Phoenix|Philadelphia|San Antonio|San Diego|Dallas|San Jose)\b', resume_txt)
+    if locations:
+        structured_data["Location"] = list(set(locations)) if len(locations) > 1 else locations[0]
 
     return structured_data
 
