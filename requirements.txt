@@ -1,6 +1,11 @@
+
+
+cython<3
+numpy<1.20
 fastapi==0.95.0
 uvicorn==0.22.0
 spacy==2.3.2
 PyMuPDF==1.22.5
 Pillow==8.3.2
-pydantic<2.0.0   # FastAPI 0.95.0 requires Pydantic v1
+pydantic<2.0.0
+python-multipart
