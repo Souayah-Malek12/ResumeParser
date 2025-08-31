@@ -10,6 +10,18 @@ import requests
 
 app = FastAPI()
 
+
+# Add CORS middleware
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow all origins for testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Load spaCy model
 nlp = spacy.load("./model/nlp_ner_model")
 
