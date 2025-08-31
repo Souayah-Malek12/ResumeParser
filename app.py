@@ -4,7 +4,6 @@ import spacy
 import re
 import fitz  # PyMuPDF
 from PIL import Image
-import pytesseract
 import shutil
 from pathlib import Path
 import requests
